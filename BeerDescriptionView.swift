@@ -128,7 +128,22 @@ struct BeerDescriptionView: View {
 
             HStack {
                 Spacer()
-                Text("Question \(currentIndex + 1)/\(questions.count)")
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        Text("Progress")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Text("\(currentIndex + 1) / \(questions.count)")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+
+                    ProgressView(value: Double(currentIndex + 1), total: Double(questions.count))
+                        .progressViewStyle(.linear)
+                }
+                .padding(.horizontal)
+
                     .foregroundColor(.secondary)
                     .font(.subheadline)
             }

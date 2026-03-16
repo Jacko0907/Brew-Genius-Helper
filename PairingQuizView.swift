@@ -140,67 +140,88 @@ struct PairingQuizView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 20) {
-                Text("Menu Pairing Quiz")
-                    .font(.largeTitle)
-                    .bold()
+            if let currentQuestion = currentQuestion {
+                VStack(spacing: 20) {
+                    Text("Menu Pairing Quiz")
+                        .font(.largeTitle)
+                        .bold()
 
-                Text("What pairs with \(questions[index].beer)?")
-                    .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.horizontal)
-
-                // ✅ Show full multiple-choice answers (A–D)
-                ForEach(questions[index].choices, id: \.self) { choice in
-                    Button(action: {
-                        checkAnswer(choice)
-                    }) {
-                        Text(choice)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.red.opacity(0.85))
-                            .foregroundColor(.white)
-                            .cornerRadius(10)
-                            .shadow(radius: 5)
-                            .padding(.horizontal)
-                    }
-                }
-
-                if !feedback.isEmpty {
-                    Text(feedback)
-                        .foregroundColor(feedback.contains("Correct") ? .green : .red)
-                        .font(.headline)
+                    Text("What pairs with \(currentQuestion.beer)?")
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
-                        .padding(.horizontal, 20)
+                        .padding(.horizontal)
 
-                    Button(index < questions.count - 1 ? "Next Question" : "Finish Quiz") {
-                        nextQuestion()
+                    ForEach(currentQuestion.choices, id: \.self) { choice in
+                        Button(action: {
+                            checkAnswer(choice)
+                        }) {
+                            Text(choice)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.red.opacity(0.85))
+                                .foregroundColor(.white)
+                                .cornerRadius(10)
+                                .shadow(radius: 5)
+                                .padding(.horizontal)
+                        }
                     }
-                    .padding(.vertical, 10)
-                    .padding(.horizontal, 24)
-                    .background(Color.orange)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
-                }
 
+                    if !feedback.isEmpty {
+                        Text(feedback)
+                            .foregroundColor(feedback.contains("Correct") ? .green : .red)
+                            .font(.headline)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding(.horizontal, 20)
 
-                HStack {
-                    Spacer()
-                    Text("Question \(index + 1)/\(questions.count)")
+                        Button(index < questions.count - 1 ? "Next Question" : "Finish Quiz") {
+                            nextQuestion()
+                        }
+                        .padding(.vertical, 10)
+                        .padding(.horizontal, 24)
+                        .background(Color.orange)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                    }
+
+                    HStack {
+                        Spacer()
+                        VStack(alignment: .leading, spacing: 6) {
+                            HStack {
+                                Text("Progress")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                                Spacer()
+                                Text("\(index + 1) / \(questions.count)")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
+
+                            ProgressView(value: Double(index + 1), total: Double(questions.count))
+                                .progressViewStyle(.linear)
+                        }
+                        .padding(.horizontal)
                         .foregroundColor(.secondary)
                         .font(.subheadline)
+                    }
+                    .padding(.horizontal)
                 }
-                .padding(.horizontal)
+                .padding()
+            } else {
+                ContentUnavailableView("No pairing questions available", systemImage: "fork.knife")
             }
-            .padding()
         }
         .navigationBarTitleDisplayMode(.inline)
         .overlay(achievementOverlay)
         .onAppear {
-            questions.shuffle()
+            resetQuiz()
         }
 
+    }
+
+    private var currentQuestion: PairingQuestion? {
+        guard questions.indices.contains(index) else { return nil }
+        return questions[index]
     }
 
     // MARK: - Confetti & Achievement Overlay
@@ -235,19 +256,19 @@ struct PairingQuizView: View {
 
     // MARK: - Quiz Logic
     private func checkAnswer(_ choice: String) {
-        let correctLetter = questions[index].correctAnswer
+        guard let currentQuestion = currentQuestion else { return }
+        let correctLetter = currentQuestion.correctAnswer
+
         if choice.hasPrefix(correctLetter) {
             feedback = "✅ Correct!"
             score += 1
         } else {
-            if let correct = questions[index].choices.first(where: { $0.hasPrefix(correctLetter) }) {
+            if let correct = currentQuestion.choices.first(where: { $0.hasPrefix(correctLetter) }) {
                 feedback = "❌ Incorrect. Correct answer: \(correct)"
             } else {
                 feedback = "❌ Incorrect."
             }
         }
-
-        
     }
 
     private func nextQuestion() {
@@ -262,5 +283,13 @@ struct PairingQuizView: View {
                 quizName: "Menu Pairing Quiz"
             )
         }
+    }
+
+    private func resetQuiz() {
+        index = 0
+        feedback = ""
+        score = 0
+        finished = false
+        questions.shuffle()
     }
 }

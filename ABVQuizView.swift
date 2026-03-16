@@ -28,7 +28,23 @@ struct ABVQuizView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 18) {
-                Text("Question \(index + 1) of \(questions.count)")
+                // Progress
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        Text("Progress")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Text("\(index + 1) / \(questions.count)")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+
+                    ProgressView(value: Double(index + 1), total: Double(questions.count))
+                        .progressViewStyle(.linear)
+                }
+                .padding(.top, 8)
+                .padding(.horizontal)
                     .font(.headline)
                     .padding(.top, 8)
                 
